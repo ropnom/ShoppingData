@@ -37,7 +37,6 @@ javax.servlet.http.HttpServletResponse, javax.sql.DataSource "%>
 						
 						%>
 						
-						<option>Yuan | The Guo Brothers | China | 4.95</option>
 						
 						<%
 

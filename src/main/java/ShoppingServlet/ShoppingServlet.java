@@ -1,9 +1,14 @@
 package ShoppingServlet;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -12,6 +17,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.sql.DataSource;
 
 public class ShoppingServlet extends HttpServlet {
 	/**
@@ -25,30 +31,89 @@ public class ShoppingServlet extends HttpServlet {
 
 	public void doPost(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
-		// esto indica qeu si hay sesion me la usas pero sino no me las crees.
+
+		// esto indica que si hay sesion me la usas pero sino no me las crees.
 		HttpSession session = req.getSession(false);
+
+		// en caso de que no haya valorpara la sesion pero se haya creado
+		// enviame error
 		if (session == null) {
 			res.sendRedirect("http://localhost:8000/error.html");
 		}
+		// obtengo el vector del carrito de la compra puede estar vacio o no
 		Vector buylist = (Vector) session.getValue("shopping.shoppingcart");
+		
+		//que haccion has hecho  --> ADD  o DELETE o CHECKOUT
 		String action = req.getParameter("action");
+		
 		if (!action.equals("CHECKOUT")) {
+			
 			if (action.equals("DELETE")) {
+				
 				String del = req.getParameter("delindex");
+				//forma fashion de pasar a int desde String
 				int d = (new Integer(del)).intValue();
+				//elimina de lista el elemento que toca
 				buylist.removeElementAt(d);
+				
 			} else if (action.equals("ADD")) {
+				
 				// any previous buys of same cd?
 				boolean match = false;
+				//obtien el cd elegido
 				CD aCD = getCD(req);
+				//la lista esta vacia?
 				if (buylist == null) {
 					// add first cd to the cart
 					buylist = new Vector(); // first order
 					buylist.addElement(aCD);
+					
+					Context envContext = null;
+					 try{
+					//realizamos una consulta la base de datos.
+					envContext = new InitialContext();
+					Context initContext = (Context) envContext
+							.lookup("java:/comp/env");
+					DataSource ds3 = (DataSource) initContext.lookup("jdbc/testDB");
+					//DataSource ds = (DataSource)envContext.lookup("java:/comp/env/jdbc/testDB");
+					Connection con3 = ds3.getConnection();
+
+					Statement stmt3 = con3.createStatement();							
+					String query3 = "Update  shopping set quantity=(quantity-"+aCD.getQuantity()+") where Album='"+aCD.getAlbum()+"';";
+					 stmt3.executeUpdate(query3);
+					 }
+					 catch(Exception e)
+					 {
+						 e.printStackTrace();
+					 }
+					 
+					
 				} else { // not first buy
 					for (int i = 0; i < buylist.size(); i++) {
 						CD cd = (CD) buylist.elementAt(i);
 						if (cd.getAlbum().equals(aCD.getAlbum())) {
+							
+							 Context envContext = null;
+							 try{
+							//realizamos una consulta la base de datos.
+							envContext = new InitialContext();
+							Context initContext = (Context) envContext
+									.lookup("java:/comp/env");
+							DataSource ds3 = (DataSource) initContext.lookup("jdbc/testDB");
+							//DataSource ds = (DataSource)envContext.lookup("java:/comp/env/jdbc/testDB");
+							Connection con3 = ds3.getConnection();
+
+							Statement stmt3 = con3.createStatement();							
+							String query3 = "Update  shopping set quantity=(quantity-"+aCD.getQuantity()+") where Album='"+aCD.getAlbum()+"';";
+							 stmt3.executeUpdate(query3);
+							 }
+							 catch(Exception e)
+							 {
+								 e.printStackTrace();
+							 }
+							
+							
+							
 							cd.setQuantity(cd.getQuantity() + aCD.getQuantity());
 							buylist.setElementAt(cd, i);
 							match = true;
@@ -63,6 +128,7 @@ public class ShoppingServlet extends HttpServlet {
 			ServletContext sc = getServletContext();
 			RequestDispatcher rd = sc.getRequestDispatcher(url);
 			rd.forward(req, res);
+			
 		} else if (action.equals("CHECKOUT")) {
 			float total = 0;
 			for (int i = 0; i < buylist.size(); i++) {
