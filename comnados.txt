@@ -1,0 +1,29 @@
+create database shoppingbd;
+
+create user 'data'@'localhost' identified by 'data';
+grant all privileges on shoppingbd.* to 'data'@'localhost';
+flush privileges;
+exit;
+
+Importamos la base de datos :
+
+(en el directorio del file)
+entrar a mysql y poner:
+
+source shoppingbd.sql
+
+use shoppingbd;
+
+
+
+
+DROP TABLE IF EXISTS `shopping`;
+CREATE TABLE `shopping` (
+  `Album` varchar(45) NOT NULL,
+  `Artista` varchar(45) DEFAULT NULL,
+  `Country` varchar(45) DEFAULT NULL,
+  `Price` float DEFAULT NULL,
+  `quantity` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Album`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO `shopping` VALUES ('cantar','sola','catalunya',3.99,5),('marea','mar','cat',3.99,5),('soltar','ocell','cat',4.99,6),('volar','coma','frança',3.55,4);
